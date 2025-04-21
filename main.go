@@ -1,66 +1,69 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
+	"context"
+	"dp/internal/api/http"
+	v1 "dp/internal/api/http/all_methods/v1"
+	"dp/internal/client_factory"
+	"dp/internal/main_page"
 	_ "github.com/hashicorp/go-msgpack/codec"
-	"io"
-	"net/http"
+	"github.com/russianinvestments/invest-api-go-sdk/investgo"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"log"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
 )
 
-//TIP To run your code, right-click the code and select <b>Run</b>. Alternatively, click
-// the <icon src="AllIcons.Actions.Execute"/> icon in the gutter and select the <b>Run</b> menu item from here.
-
 func main() {
-	http.HandleFunc("/", handler)
-	fmt.Println(http.ListenAndServe(":80", nil))
-}
+	cfg := investgo.Config{
+		EndPoint:                      "invest-public-api.tinkoff.ru:443",
+		Token:                         "",
+		AppName:                       "invest-api-go-sdk",
+		AccountId:                     "",
+		DisableResourceExhaustedRetry: false,
+		DisableAllRetry:               false,
+		MaxRetries:                    3,
+	}
 
-type js struct {
-	Age  int    `json:"age"`
-	Name string `json:"name"`
-}
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+	defer cancel()
 
-type answer struct {
-	Name   string `json:"name"`
-	Status string `json:"status"`
-}
-
-func handler(w http.ResponseWriter, r *http.Request) {
-	bytes, err := io.ReadAll(r.Body)
-	defer r.Body.Close()
+	zapConfig := zap.NewDevelopmentConfig()
+	zapConfig.EncoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout(time.DateTime)
+	zapConfig.EncoderConfig.TimeKey = "time"
+	l, err := zapConfig.Build()
+	logger := l.Sugar()
+	defer func() {
+		err := logger.Sync()
+		if err != nil {
+			log.Printf(err.Error())
+		}
+	}()
 	if err != nil {
-		http.Error(w, "pizdaparse:"+err.Error(), http.StatusInternalServerError)
-		return
-	}
-	j := js{}
-	err = json.Unmarshal(bytes, &j)
-	if err != nil {
-		http.Error(w, "pizdaunmarshal:"+err.Error(), http.StatusInternalServerError)
+		log.Fatalf("logger creating error %v", err)
 	}
 
-	answ := answer{
-		Name: j.Name,
-	}
+	factory := client_factory.NewClientFactory(cfg, l)
+	factory.Start(ctx)
 
-	switch j.Name {
-	case "Artur":
-		answ.Status = "Mobile"
-	case "Ivan":
-		answ.Status = "Backend"
-	default:
-		answ.Status = "Gay"
-	}
+	mainPageInfoProvider := main_page.NewMainPageInfoProvider()
 
-	bytes, err = json.Marshal(answ)
-	if err != nil {
-		http.Error(w, "marshal:"+err.Error(), http.StatusInternalServerError)
-	}
+	handler := v1.NewHTTPServerHandler(factory, mainPageInfoProvider)
 
-	_, err = w.Write(bytes)
-	if err != nil {
-		http.Error(w, "write:"+err.Error(), http.StatusInternalServerError)
-	}
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		httpServerErr := http.StartHTTPServer(handler)
+		if httpServerErr != nil {
+			logger.Fatalf("http server died" + err.Error())
+		}
+	}()
+
+	wg.Wait()
 }
 
 //TIP See GoLand help at <a href="https://www.jetbrains.com/help/go/">jetbrains.com/help/go/</a>.
