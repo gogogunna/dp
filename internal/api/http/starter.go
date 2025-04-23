@@ -8,7 +8,7 @@ type Handler interface {
 }
 
 func StartHTTPServer(handler Handler) error {
-	http.HandleFunc("/authenticate/v1", handler.Authenticate)
+	http.HandleFunc("/authenticate/v1", handler.Authenticate) // переделать на запихивание клиента в контекст
 	http.HandleFunc("/main/v1", handler.MainPageInfo)
 	err := http.ListenAndServe(":80", nil)
 	return err

@@ -21,8 +21,8 @@ func MapMoneyValue(moneyValue *investapi.MoneyValue) internal.Money {
 	return internal.Money(units + nanos)
 }
 
-func MapQuantity(quotation *investapi.Quotation) internal.Percent {
+func MapQuantity(quotation *investapi.Quotation) internal.Quantity {
 	units := quotation.GetUnits()
 	nanos := int64(float64(quotation.GetNano()) / nanoDivider)
-	return internal.Percent(units + nanos)
+	return internal.Quantity(units + nanos)
 }

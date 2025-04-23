@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"dp/internal"
 	"dp/internal/api/http"
 	v1 "dp/internal/api/http/all_methods/v1"
 	"dp/internal/client_factory"
 	"dp/internal/main_page"
+	"fmt"
 	_ "github.com/hashicorp/go-msgpack/codec"
 	"github.com/russianinvestments/invest-api-go-sdk/investgo"
 	"go.uber.org/zap"
@@ -18,6 +20,7 @@ import (
 )
 
 func main() {
+	fmt.Println(internal.OperationTypeInputSwift)
 	cfg := investgo.Config{
 		EndPoint:                      "invest-public-api.tinkoff.ru:443",
 		Token:                         "",
