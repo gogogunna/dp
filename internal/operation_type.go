@@ -71,7 +71,7 @@ const (
 	OperationTypeFutureExpiration
 )
 
-var operationTypeComments = map[OperationType]string{
+var OperationTypeDescs = map[OperationType]string{
 	OperationTypeUnspecified:              "Тип операции не определен.",
 	OperationTypeInput:                    "Пополнение брокерского счета.",
 	OperationTypeBondTax:                  "Удержание НДФЛ по купонам.",

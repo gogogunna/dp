@@ -11,7 +11,7 @@ type MinimalPortfolioProvider interface {
 		_ context.Context,
 		accountClient internal.AccountIdWithAttachedClientttt,
 		currency int,
-	) ([]internal.Position, error)
+	) ([]internal.MinimalPortfolioPosition, error)
 }
 
 type PositionEnrichingInfoProvider interface {

@@ -27,10 +27,16 @@ func (p *MainPageInfoProvider) MainPageInfo(
 
 	fmt.Println(accountClient.AccountId)
 
+	portfolioCost := investapi_to_domain_mapping.MapMoneyValue(resp.GetTotalAmountPortfolio())
+	percent := investapi_to_domain_mapping.MapQuotation(resp.GetExpectedYield())
+	allTimeMoney := int(float64(portfolioCost) * float64(percent) / 10000)
 	info := internal.MainPageInfo{
-		UserName:     "John Doe (пока нет доступа к имени)",
-		DailyPercent: investapi_to_domain_mapping.MapQuotation(resp.GetDailyYieldRelative()),
-		DailyMoney:   investapi_to_domain_mapping.MapMoneyValue(resp.GetDailyYield()),
+		UserName:       "John Doe",
+		DailyPercent:   investapi_to_domain_mapping.MapQuotation(resp.GetDailyYieldRelative()),
+		DailyMoney:     investapi_to_domain_mapping.MapMoneyValue(resp.GetDailyYield()),
+		AlltimeMoney:   allTimeMoney,
+		AlltimePercent: investapi_to_domain_mapping.MapQuotation(resp.GetExpectedYield()),
+		AllMoney:       investapi_to_domain_mapping.MapMoneyValue(resp.GetTotalAmountPortfolio()),
 	}
 
 	return info, nil

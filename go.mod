@@ -1,15 +1,13 @@
 module dp
 
-go 1.23.0
-
-toolchain go1.24.0
+go 1.24.2
 
 require (
 	github.com/hashicorp/go-msgpack v0.5.5
 	go.uber.org/zap v1.25.0
 )
 
-require golang.org/x/sync v0.13.0 // indirect
+require golang.org/x/sync v0.13.0
 
 require (
 	cloud.google.com/go/compute v1.20.1 // indirect
