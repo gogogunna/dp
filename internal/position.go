@@ -10,8 +10,17 @@ type Position struct {
 	Quantity Quantity
 }
 
+type MinimalPortfolioPosition struct {
+	Position
+	AllTimeMoney   Money
+	AllTimePercent Percent
+	DailyMoney     Money
+	DailyPercent   Percent
+	AllMoney       Money
+}
+
 type PortfolioPosition struct {
-	Position Position
+	Position MinimalPortfolioPosition
 	Enriched PositionEnrichingInfo
 }
 
@@ -23,7 +32,8 @@ type PositionEnrichingInfo struct {
 
 type Operation struct {
 	Position
-	OperationType OperationType
+	OperationType        OperationType
+	OperationDescription string
 }
 
 type EnrichedOperation struct {

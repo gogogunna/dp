@@ -40,7 +40,7 @@ func NewEnrichedOperationsProvider(
 	}
 }
 
-func (p *EnrichedOperationsProvider) Portfolio(
+func (p *EnrichedOperationsProvider) Operations(
 	ctx context.Context,
 	accountClient internal.AccountIdWithAttachedClientttt,
 	figies []internal.Figi,

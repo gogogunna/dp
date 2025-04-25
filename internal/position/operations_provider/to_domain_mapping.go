@@ -13,7 +13,8 @@ func mapOperationToDomain(resp *investapi.Operation) internal.Operation {
 			Price:    investapi_to_domain_mapping.MapMoneyValue(resp.GetPrice()),
 			Quantity: internal.Quantity(resp.GetQuantity()),
 		},
-		OperationType: internal.OperationType(resp.GetOperationType()),
+		OperationType:        internal.OperationType(resp.GetOperationType()),
+		OperationDescription: internal.OperationTypeDescs[internal.OperationType(resp.GetOperationType())],
 	}
 }
 

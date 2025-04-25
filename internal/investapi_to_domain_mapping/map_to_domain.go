@@ -6,23 +6,23 @@ import (
 )
 
 const (
-	nanoDivider = 1000000000
+	divider    = 10000000
+	multiplier = 100
 )
 
 func MapQuotation(quotation *investapi.Quotation) internal.Percent {
 	units := quotation.GetUnits()
-	nanos := int64(float64(quotation.GetNano()) / nanoDivider)
-	return internal.Percent(units + nanos)
+	nanos := int64(quotation.GetNano() / divider)
+	return internal.Percent(units*multiplier + nanos)
 }
 
 func MapMoneyValue(moneyValue *investapi.MoneyValue) internal.Money {
 	units := moneyValue.GetUnits()
-	nanos := int64(float64(moneyValue.GetNano()) / nanoDivider)
-	return internal.Money(units + nanos)
+	nanos := int64(moneyValue.GetNano() / divider)
+	return internal.Money(units*multiplier + nanos)
 }
 
 func MapQuantity(quotation *investapi.Quotation) internal.Quantity {
 	units := quotation.GetUnits()
-	nanos := int64(float64(quotation.GetNano()) / nanoDivider)
-	return internal.Quantity(units + nanos)
+	return internal.Quantity(units)
 }

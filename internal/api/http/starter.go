@@ -5,11 +5,15 @@ import "net/http"
 type Handler interface {
 	Authenticate(w http.ResponseWriter, r *http.Request)
 	MainPageInfo(w http.ResponseWriter, r *http.Request)
+	Portfolio(w http.ResponseWriter, r *http.Request)
+	Operations(w http.ResponseWriter, r *http.Request)
 }
 
 func StartHTTPServer(handler Handler) error {
 	http.HandleFunc("/authenticate/v1", handler.Authenticate) // переделать на запихивание клиента в контекст
 	http.HandleFunc("/main/v1", handler.MainPageInfo)
+	http.HandleFunc("/portfolio/v1", handler.Portfolio)
+	http.HandleFunc("/operations/v1", handler.Operations)
 	err := http.ListenAndServe(":80", nil)
 	return err
 }

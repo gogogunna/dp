@@ -8,7 +8,7 @@ import (
 
 type MinimalPortfolioProvider struct{}
 
-func NewOperationsProvider() *MinimalPortfolioProvider {
+func NewMinimalPortfolioProvider() *MinimalPortfolioProvider {
 	return &MinimalPortfolioProvider{}
 }
 
@@ -16,7 +16,7 @@ func (p *MinimalPortfolioProvider) Portfolio(
 	_ context.Context,
 	accountClient internal.AccountIdWithAttachedClientttt,
 	currency int,
-) ([]internal.Position, error) {
+) ([]internal.MinimalPortfolioPosition, error) {
 	operationsClient := accountClient.Client.NewOperationsServiceClient()
 
 	portfolio, err := operationsClient.GetPortfolio(accountClient.AccountId, investapi.PortfolioRequest_CurrencyRequest(currency))
