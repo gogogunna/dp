@@ -34,7 +34,7 @@ func (p *MainPageInfoProvider) MainPageInfo(
 		UserName:       "John Doe",
 		DailyPercent:   investapi_to_domain_mapping.MapQuotation(resp.GetDailyYieldRelative()),
 		DailyMoney:     investapi_to_domain_mapping.MapMoneyValue(resp.GetDailyYield()),
-		AlltimeMoney:   allTimeMoney,
+		AlltimeMoney:   internal.Money(allTimeMoney),
 		AlltimePercent: investapi_to_domain_mapping.MapQuotation(resp.GetExpectedYield()),
 		AllMoney:       investapi_to_domain_mapping.MapMoneyValue(resp.GetTotalAmountPortfolio()),
 	}

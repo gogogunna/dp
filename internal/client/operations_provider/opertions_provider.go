@@ -3,6 +3,7 @@ package operations_provider
 import (
 	"context"
 	"dp/internal"
+	"dp/internal/client"
 	"github.com/russianinvestments/invest-api-go-sdk/investgo"
 	investapi "github.com/russianinvestments/invest-api-go-sdk/proto"
 )
@@ -18,7 +19,7 @@ func (p *OperationsProvider) Operations(
 	accountClient internal.AccountIdWithAttachedClientttt,
 	figies []internal.Figi,
 	interval internal.TimeInterval,
-) ([]internal.Operation, error) {
+) ([]client.Operation, error) {
 	operationsClient := accountClient.Client.NewOperationsServiceClient()
 
 	figi := ""
@@ -32,10 +33,26 @@ func (p *OperationsProvider) Operations(
 		From:      interval.Start,
 		To:        interval.End,
 	}
-	portfolio, err := operationsClient.GetOperations(req)
+	operationsResponse, err := operationsClient.GetOperations(req)
 	if err != nil {
 		return nil, err
 	}
 
-	return mapOperationsToDomain(portfolio.OperationsResponse), nil
+	if len(figies) != 0 {
+		figiesHashSet := make(map[string]struct{}, len(figies))
+		for _, fig := range figies {
+			figiesHashSet[string(fig)] = struct{}{}
+		}
+
+		operations := make([]*investapi.Operation, 0, len(operationsResponse.Operations))
+		for _, operation := range operationsResponse.GetOperations() {
+			if _, ok := figiesHashSet[operation.GetFigi()]; ok {
+				operations = append(operations, operation)
+			}
+		}
+
+		return mapOperationsToDomain(operations), nil
+	}
+
+	return mapOperationsToDomain(operationsResponse.OperationsResponse.GetOperations()), nil
 }

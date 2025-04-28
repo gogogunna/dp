@@ -3,67 +3,66 @@ package portfolio_provider
 import (
 	"context"
 	"dp/internal"
+	"dp/internal/client"
 	"fmt"
 )
 
-type MinimalPortfolioProvider interface {
+type PortfolioProvider interface {
 	Portfolio(
 		_ context.Context,
 		accountClient internal.AccountIdWithAttachedClientttt,
 		currency int,
-	) ([]internal.MinimalPortfolioPosition, error)
+	) (client.Portfolio, error)
 }
 
-type PositionEnrichingInfoProvider interface {
-	PositionEnrichingInfo(
+type InstrumentsInfoProvider interface {
+	InstrumentsInfo(
 		_ context.Context,
 		accountClient internal.AccountIdWithAttachedClientttt,
 		figies []internal.Figi,
-	) (map[internal.Figi]internal.PositionEnrichingInfo, error)
+	) (map[internal.Figi]client.Instrument, error)
 }
 
-type PortfolioProvider struct {
-	portfolioProvider     MinimalPortfolioProvider
-	positionEnrichingInfo PositionEnrichingInfoProvider
+type PortfolioItemsProvider struct {
+	portfolioProvider       PortfolioProvider
+	instrumentsInfoProvider InstrumentsInfoProvider
 }
 
-func NewPortfolioProvider(
-	portfolioProvider MinimalPortfolioProvider,
-	infoProvider PositionEnrichingInfoProvider,
-) *PortfolioProvider {
-	return &PortfolioProvider{
-		portfolioProvider:     portfolioProvider,
-		positionEnrichingInfo: infoProvider,
+func NewPortfolioItemsProvider(
+	portfolioProvider PortfolioProvider,
+	instrumentsInfoProvider InstrumentsInfoProvider,
+) *PortfolioItemsProvider {
+	return &PortfolioItemsProvider{
+		portfolioProvider:       portfolioProvider,
+		instrumentsInfoProvider: instrumentsInfoProvider,
 	}
 }
 
-func (p *PortfolioProvider) Portfolio(
+func (p *PortfolioItemsProvider) PortfolioItems(
 	ctx context.Context,
 	accountClient internal.AccountIdWithAttachedClientttt,
 	currency int,
-) ([]internal.PortfolioPosition, error) {
+) ([]internal.PortfolioItem, error) {
 	portfolio, err := p.portfolioProvider.Portfolio(ctx, accountClient, currency)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get minimal portfolio: %w", err)
 	}
 
-	figies := make([]internal.Figi, 0, len(portfolio))
-	for _, position := range portfolio {
-		figies = append(figies, position.Figi)
+	figies := make([]internal.Figi, 0, len(portfolio.Items))
+	for _, position := range portfolio.Items {
+		figies = append(figies, internal.Figi(position.Figi))
 	}
 
-	enrichingInfo, err := p.positionEnrichingInfo.PositionEnrichingInfo(ctx, accountClient, figies)
+	instrumentsInfo, err := p.instrumentsInfoProvider.InstrumentsInfo(ctx, accountClient, figies)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get position enriching info: %w", err)
 	}
 
-	enrichedPositions := make([]internal.PortfolioPosition, 0, len(enrichingInfo))
-	for _, item := range portfolio {
-		enrichedPositions = append(enrichedPositions, internal.PortfolioPosition{
-			Position: item,
-			Enriched: enrichingInfo[item.Figi],
-		})
+	portfolioItems := make([]internal.PortfolioItem, 0, len(instrumentsInfo))
+	for _, item := range portfolio.Items {
+
+		portfolioItems = append(portfolioItems, MapPortfolioItem(item, instrumentsInfo[internal.Figi(item.Figi)]))
 	}
 
-	return enrichedPositions, nil
+	return portfolioItems, nil
 }

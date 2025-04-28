@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"dp/internal"
+	"dp/internal/client"
 	"fmt"
 	"golang.org/x/sync/errgroup"
 	"sync"
@@ -12,21 +13,21 @@ const (
 	goroutinesMax = 10
 )
 
-type PositionEnrichingInfoProvider struct{}
+type InstrumentsInfoProvider struct{}
 
-func NewClientPositionEnrichingInfoProvider() *PositionEnrichingInfoProvider {
-	return &PositionEnrichingInfoProvider{}
+func NewInstrumentsInfoProvider() *InstrumentsInfoProvider {
+	return &InstrumentsInfoProvider{}
 }
 
-func (s *PositionEnrichingInfoProvider) PositionEnrichingInfo(
+func (s *InstrumentsInfoProvider) InstrumentsInfo(
 	_ context.Context,
 	accountClient internal.AccountIdWithAttachedClientttt,
 	figies []internal.Figi,
-) (map[internal.Figi]internal.PositionEnrichingInfo, error) {
+) (map[internal.Figi]client.Instrument, error) {
 	instrumentsClient := accountClient.Client.NewInstrumentsServiceClient()
 
 	eg := errgroup.Group{}
-	answer := make(map[internal.Figi]internal.PositionEnrichingInfo, len(figies))
+	answer := make(map[internal.Figi]client.Instrument, len(figies))
 	mu := sync.Mutex{}
 	eg.SetLimit(goroutinesMax)
 	for _, figi := range figies {
@@ -40,7 +41,7 @@ func (s *PositionEnrichingInfoProvider) PositionEnrichingInfo(
 				return nil
 			}
 
-			domain := mapEnrichingInfoToDomain(resp.InstrumentResponse)
+			domain := mapPositionInfo(resp.InstrumentResponse)
 			mu.Lock()
 			answer[figi] = domain
 			mu.Unlock()
