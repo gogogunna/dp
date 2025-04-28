@@ -5,13 +5,13 @@ import (
 	"dp/internal"
 	"dp/internal/api/http"
 	v1 "dp/internal/api/http/all_methods/v1"
+	"dp/internal/client/instrument_info_providers/client"
+	"dp/internal/client/operations_provider"
+	"dp/internal/client/portfolio_provider"
 	"dp/internal/client_factory"
 	"dp/internal/main_page"
-	"dp/internal/position/enriched_operations_provider"
-	"dp/internal/position/enriching_info_providers/client"
-	"dp/internal/position/minimal_portfolio_provider"
-	"dp/internal/position/operations_provider"
-	"dp/internal/position/portfolio_provider"
+	"dp/internal/position/deal_operation_provider"
+	portfolio_items_provider "dp/internal/position/portfolio_provider"
 	"fmt"
 	_ "github.com/hashicorp/go-msgpack/codec"
 	"github.com/russianinvestments/invest-api-go-sdk/investgo"
@@ -58,12 +58,12 @@ func main() {
 	factory.Start(ctx)
 
 	mainPageInfoProvider := main_page.NewMainPageInfoProvider()
-	positionInfoProvider := client.NewClientPositionEnrichingInfoProvider()
-	minimalPortfolioProvider := minimal_portfolio_provider.NewMinimalPortfolioProvider()
-	fullPositionInfoProvider := portfolio_provider.NewPortfolioProvider(minimalPortfolioProvider, positionInfoProvider)
+	instrumentsProvider := client.NewInstrumentsInfoProvider()
+	portfolioProvider := portfolio_provider.NewPortfolioProvider()
 	operationsProvider := operations_provider.NewOperationsProvider()
-	enrichedOperationsProvider := enriched_operations_provider.NewEnrichedOperationsProvider(operationsProvider, positionInfoProvider)
-	handler := v1.NewHTTPServerHandler(factory, mainPageInfoProvider, fullPositionInfoProvider, enrichedOperationsProvider)
+	portfolioItemsProvider := portfolio_items_provider.NewPortfolioItemsProvider(portfolioProvider, instrumentsProvider)
+	dealOperationsProvider := deal_operation_provider.NewDealOperationsProvider(operationsProvider, instrumentsProvider)
+	handler := v1.NewHTTPServerHandler(factory, mainPageInfoProvider, portfolioItemsProvider, dealOperationsProvider)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)

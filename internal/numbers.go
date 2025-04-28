@@ -1,9 +1,9 @@
 package internal
 
 // Money - деньги в копейках
-type Money = int
+type Money UnitsWithNano
 
 // Percent - процент без запятых - 100% = 10000
-type Percent = int
+type Percent UnitsWithNano
 
-type Quantity = int
+type Quantity int

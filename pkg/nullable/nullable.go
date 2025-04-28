@@ -19,3 +19,11 @@ func (n *Nullable[T]) IsDefined() bool {
 func (n *Nullable[T]) IsNil() bool {
 	return !n.ok
 }
+
+func NilDefaultValuee[T comparable](value T) Nullable[T] {
+	if value == *new(T) {
+		return Nullable[T]{}
+	}
+
+	return NewValue(value)
+}

@@ -11,8 +11,8 @@ build() {
 }
 
 deploy() {
-  kill;
-  build;
+  kill
+  build
   docker run -p 80:80 -d $APPNAME;
 }
 

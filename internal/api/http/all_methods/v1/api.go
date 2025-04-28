@@ -3,11 +3,11 @@ package v1
 import (
 	"context"
 	"dp/internal"
+	"dp/pkg/slices"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 )
 
 type MainPageInfoProvider interface {
@@ -22,20 +22,20 @@ type ClientFactory interface {
 }
 
 type PortfolioProvider interface {
-	Portfolio(
+	PortfolioItems(
 		ctx context.Context,
 		accountClient internal.AccountIdWithAttachedClientttt,
 		currency int,
-	) ([]internal.PortfolioPosition, error)
+	) ([]internal.PortfolioItem, error)
 }
 
 type OperationsProvider interface {
-	Operations(
+	DealOperations(
 		ctx context.Context,
 		accountClient internal.AccountIdWithAttachedClientttt,
 		figies []internal.Figi,
 		interval internal.TimeInterval,
-	) (map[internal.Figi][]internal.EnrichedOperation, error)
+	) (map[internal.Figi][]internal.DealOperation, error)
 }
 
 type HTTPServerHandler struct {
@@ -98,11 +98,11 @@ func (h *HTTPServerHandler) MainPageInfo(w http.ResponseWriter, r *http.Request)
 
 	resp := MainPageResponse{
 		Name:           info.UserName,
-		DailyPercent:   info.DailyPercent,
-		DailyMoney:     info.DailyMoney,
-		AlltimePercent: info.AlltimePercent,
-		AlltimeMoney:   info.AlltimeMoney,
-		AllMoney:       info.AllMoney,
+		DailyPercent:   int(info.DailyPercent),
+		DailyMoney:     int(info.DailyMoney),
+		AlltimePercent: int(info.AlltimePercent),
+		AlltimeMoney:   int(info.AlltimeMoney),
+		AllMoney:       int(info.AllMoney),
 	}
 	bytes, err := json.Marshal(resp)
 	if err != nil {
@@ -148,38 +148,15 @@ func (h *HTTPServerHandler) Operations(w http.ResponseWriter, r *http.Request) {
 		End:   operationsReq.Interval.To,
 	}
 
-	operations, err := h.operationsProvider.Operations(r.Context(), client, figies, interval)
+	operations, err := h.operationsProvider.DealOperations(r.Context(), client, figies, interval)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
 
-	operationsMapped := make(map[string][]FullOperationInfo, len(operations))
-	for figi, figiOperations := range operations {
-		infos := make([]FullOperationInfo, 0, len(figiOperations))
-		for _, operation := range figiOperations {
-			var positionInfo *PositionInfo
-			if operation.EnrichingInfo.IsDefined() {
-				positionInfo = &PositionInfo{
-					Name:     operation.EnrichingInfo.Value().Name,
-					LogoPath: operation.EnrichingInfo.Value().LogoPath,
-				}
-			}
-			infos = append(infos, FullOperationInfo{
-				Operation: Operation{
-					Position: Position{
-						Figi:     string(operation.Operation.Position.Figi),
-						Price:    operation.Operation.Position.Price,
-						Quantity: operation.Operation.Position.Quantity,
-					},
-					OperationType:        int(operation.Operation.OperationType),
-					OperationDescription: operation.Operation.OperationDescription,
-				},
-				PositionInfo: positionInfo,
-			})
-		}
-
-		operationsMapped[string(figi)] = infos
+	operationsMapped := make(map[string][]DealOperation, len(operations))
+	for figi, dealOperations := range operations {
+		operationsMapped[string(figi)] = slices.Convert(dealOperations, mapDealOperation)
 	}
 	resp := OperationsResponse{
 		Operations: operationsMapped,
@@ -218,33 +195,13 @@ func (h *HTTPServerHandler) Portfolio(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	info, err := h.portfolioProvider.Portfolio(r.Context(), client, portfolioReq.Currency)
+	items, err := h.portfolioProvider.PortfolioItems(r.Context(), client, portfolioReq.Currency)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
 
-	fullPositions := make([]FullPortfolioPositionInfo, 0, len(info))
-	for _, position := range info {
-		fullPositions = append(fullPositions, FullPortfolioPositionInfo{
-			PortfolioPositionInfo: PortfolioPositionInfo{
-				Position: Position{
-					Figi:     string(position.Position.Figi),
-					Price:    position.Position.Price,
-					Quantity: position.Position.Quantity,
-				},
-				AllTimeMoney:   position.Position.AllTimeMoney,
-				AllTimePercent: position.Position.AllTimePercent,
-				DailyMoney:     position.Position.DailyMoney,
-				DailyPercent:   position.Position.DailyPercent,
-				AllMoney:       position.Position.AllMoney,
-			},
-			PositionAdditionalInfo: PositionInfo{
-				Name:     position.Enriched.Name,
-				LogoPath: position.Enriched.LogoPath,
-			},
-		})
-	}
+	fullPositions := slices.Convert(items, mapPortfolioItem)
 	resp := PortfolioResponse{
 		Positions: fullPositions,
 	}
@@ -260,80 +217,4 @@ func (h *HTTPServerHandler) Portfolio(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-}
-
-type OperationsRequest struct {
-	Figies   []string     `json:"figies"`
-	Interval TimeInterval `json:"interval"`
-}
-
-type Operation struct {
-	Position             `json:"position"`
-	OperationType        int    `json:"operation_type"`
-	OperationDescription string `json:"operation_description"`
-}
-
-type FullOperationInfo struct {
-	Operation    Operation     `json:"operation"`
-	PositionInfo *PositionInfo `json:"position_info"`
-}
-
-type OperationsResponse struct {
-	Operations map[string][]FullOperationInfo `json:"operations"`
-}
-
-type PortfolioRequest struct {
-	Currency int `json:"currency"`
-}
-
-type PortfolioResponse struct {
-	Positions []FullPortfolioPositionInfo `json:"full_positions"`
-}
-
-type Position struct {
-	Figi     string `json:"figi"`
-	Price    int    `json:"price"`
-	Quantity int    `json:"quantity"`
-}
-
-type PositionInfo struct {
-	Name     string `json:"name"`
-	LogoPath string `json:"logo_path"`
-}
-
-type PortfolioPositionInfo struct {
-	Position       Position `json:"position"`
-	AllTimeMoney   int      `json:"all_time_money"`
-	AllTimePercent int      `json:"all_time_percent"`
-	DailyMoney     int      `json:"daily_money"`
-	DailyPercent   int      `json:"daily_percent"`
-	AllMoney       int      `json:"all_money"`
-}
-
-type FullPortfolioPositionInfo struct {
-	PortfolioPositionInfo  PortfolioPositionInfo `json:"portfolio_position_info"`
-	PositionAdditionalInfo PositionInfo          `json:"position_additional_info"`
-}
-
-type FullPositionInfo struct {
-	Position Position     `json:"position"`
-	Info     PositionInfo `json:"info"`
-}
-
-type TimeInterval struct {
-	From time.Time `json:"from"`
-	To   time.Time `json:"to"`
-}
-
-type MainPageResponse struct {
-	Name           string `json:"name"`
-	DailyPercent   int    `json:"daily_percent"`
-	DailyMoney     int    `json:"daily_money"`
-	AlltimePercent int    `json:"alltime_percent"`
-	AlltimeMoney   int    `json:"alltime_money"`
-	AllMoney       int    `json:"all_money"`
-}
-
-type AuthResponse struct {
-	OK string `json:"ok"`
 }
