@@ -203,7 +203,7 @@ func (h *HTTPServerHandler) Portfolio(w http.ResponseWriter, r *http.Request) {
 
 	fullPositions := slices.Convert(items, mapPortfolioItem)
 	resp := PortfolioResponse{
-		Positions: fullPositions,
+		Items: fullPositions,
 	}
 	bytes, err = json.Marshal(resp)
 	if err != nil {

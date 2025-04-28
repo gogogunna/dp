@@ -19,7 +19,7 @@ type OperationsRequest struct {
 }
 
 type OperationsResponse struct {
-	Operations map[string][]DealOperation `json:"operations"`
+	Operations map[string][]DealOperation `json:"operations_by_figi"`
 }
 
 type PortfolioRequest struct {
@@ -27,5 +27,5 @@ type PortfolioRequest struct {
 }
 
 type PortfolioResponse struct {
-	Positions []PortfolioItem `json:"full_positions"`
+	Items []PortfolioItem `json:"portfolio_items"`
 }
