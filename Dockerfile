@@ -10,6 +10,8 @@ FROM alpine:latest
 
 COPY --from=my_app /app/server ./
 
+COPY --from=certs_context fullchain.pem privkey.pem /etc/ssl/certs/
+
 EXPOSE 443
 
 CMD ["./server"]

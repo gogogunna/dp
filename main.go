@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"dp/internal"
 	"dp/internal/api/http"
 	v1 "dp/internal/api/http/all_methods/v1"
 	"dp/internal/client/instrument_info_providers/client"
@@ -25,7 +24,6 @@ import (
 )
 
 func main() {
-	fmt.Println(internal.OperationTypeInputSwift)
 	cfg := investgo.Config{
 		EndPoint:                      "invest-public-api.tinkoff.ru:443",
 		Token:                         "",
@@ -71,7 +69,7 @@ func main() {
 		defer wg.Done()
 		httpServerErr := http.StartHTTPServer(handler)
 		if httpServerErr != nil {
-			logger.Fatalf("http server died" + err.Error())
+			fmt.Println(httpServerErr)
 		}
 	}()
 
