@@ -10,6 +10,6 @@ FROM alpine:latest
 
 COPY --from=my_app /app/server ./
 
-EXPOSE 80
+EXPOSE 443
 
 CMD ["./server"]

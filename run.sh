@@ -13,7 +13,7 @@ build() {
 deploy() {
   kill
   build
-  docker run -p 80:80 -d $APPNAME;
+  docker run -p 443:443 -d $APPNAME;
 }
 
 f_name=$1
