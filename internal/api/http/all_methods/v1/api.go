@@ -26,7 +26,7 @@ type PortfolioProvider interface {
 		ctx context.Context,
 		accountClient internal.AccountIdWithAttachedClientttt,
 		currency int,
-	) ([]internal.PortfolioItem, error)
+	) (internal.Portfolio, error)
 }
 
 type OperationsProvider interface {
@@ -98,11 +98,11 @@ func (h *HTTPServerHandler) MainPageInfo(w http.ResponseWriter, r *http.Request)
 
 	resp := MainPageResponse{
 		Name:           info.UserName,
-		DailyPercent:   int(info.DailyPercent),
-		DailyMoney:     int(info.DailyMoney),
-		AlltimePercent: int(info.AlltimePercent),
-		AlltimeMoney:   int(info.AlltimeMoney),
-		AllMoney:       int(info.AllMoney),
+		DailyPercent:   int(info.PortfolioAnalytics.DailyPercent),
+		DailyMoney:     int(info.PortfolioAnalytics.DailyMoney),
+		AlltimePercent: int(info.PortfolioAnalytics.AlltimePercent),
+		AlltimeMoney:   int(info.PortfolioAnalytics.AlltimeMoney),
+		AllMoney:       int(info.PortfolioAnalytics.AllMoney),
 	}
 	bytes, err := json.Marshal(resp)
 	if err != nil {
@@ -195,16 +195,21 @@ func (h *HTTPServerHandler) Portfolio(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	items, err := h.portfolioProvider.PortfolioItems(r.Context(), client, portfolioReq.Currency)
+	portfolio, err := h.portfolioProvider.PortfolioItems(r.Context(), client, portfolioReq.Currency)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
 
-	fullPositions := slices.Convert(items, mapPortfolioItem)
+	fullPositions := slices.Convert(portfolio.Items, mapPortfolioItem)
 	resp := PortfolioResponse{
 		Items: fullPositions,
 	}
+	if portfolio.WarningMessage.IsDefined() {
+		message := portfolio.WarningMessage.Value()
+		resp.WarningMessage = &message
+	}
+
 	bytes, err = json.Marshal(resp)
 	if err != nil {
 		http.Error(w, err.Error(), 500)

@@ -52,10 +52,11 @@ const (
 	OperationTypeOutFee
 	OperationTypeOutStampDuty
 	// Пропущенные значения для сохранения оригинальных номеров
-	_ = iota + 1 // пропускаем 48 и 49
+	undefined48
+	undefined49 // пропускаем 48 и 49
 	OperationTypeOutputSwift
 	OperationTypeInputSwift
-	_ // пропускаем 52
+	undefined52 // пропускаем 52
 	OperationTypeOutputAcquiring
 	OperationTypeInputAcquiring
 	OperationTypeOutputPenalty
@@ -69,6 +70,10 @@ const (
 	OperationTypeOverIncome
 	OperationTypeOptionExpiration
 	OperationTypeFutureExpiration
+)
+
+const (
+	OperationTypesAmount = 65
 )
 
 var OperationTypeDescs = map[OperationType]string{

@@ -64,10 +64,11 @@ func mapPortfolioInstrument(item internal.PortfolioInstrument) PortfolioInstrume
 
 func mapPortfolioAnalytics(analytics internal.PortfolioItemAnalytics) PortfolioInstrumentAnalytics {
 	return PortfolioInstrumentAnalytics{
-		AllTimeMoney:   int(analytics.AllTimeMoney),
-		AllTimePercent: int(analytics.AllTimePercent),
-		DailyMoney:     int(analytics.DailyMoney),
-		DailyPercent:   int(analytics.DailyPercent),
-		AllMoney:       int(analytics.AllMoney),
+		AllTimeMoney:       int(analytics.AllTimeMoney),
+		AllTimePercent:     int(analytics.AllTimePercent),
+		DailyMoney:         int(analytics.DailyMoney),
+		DailyPercent:       int(analytics.DailyPercent),
+		AllMoney:           int(analytics.AllMoney),
+		PercentOfPortfolio: int(analytics.PercentOfPortfolio),
 	}
 }

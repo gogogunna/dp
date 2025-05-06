@@ -20,6 +20,11 @@ func (n *Nullable[T]) IsNil() bool {
 	return !n.ok
 }
 
+func (n *Nullable[T]) SetValue(value T) {
+	n.ok = true
+	n.value = value
+}
+
 func NilDefaultValuee[T comparable](value T) Nullable[T] {
 	if value == *new(T) {
 		return Nullable[T]{}

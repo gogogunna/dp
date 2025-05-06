@@ -22,3 +22,9 @@ type DealOperation struct {
 	Operation Operation
 	Deal      nullable.Nullable[Deal]
 }
+
+type OperationAnalyticsItem struct {
+	Number     int
+	Text       string
+	MoneySpent nullable.Nullable[Money]
+}

@@ -35,19 +35,15 @@ type PortfolioInstrument struct {
 }
 
 type PortfolioInstrumentAnalytics struct {
-	AllTimeMoney   int `json:"all_time_money"`
-	AllTimePercent int `json:"all_time_percent"`
-	DailyMoney     int `json:"daily_money"`
-	DailyPercent   int `json:"daily_percent"`
-	AllMoney       int `json:"all_money"`
+	AllTimeMoney       int `json:"all_time_money"`
+	AllTimePercent     int `json:"all_time_percent"`
+	DailyMoney         int `json:"daily_money"`
+	DailyPercent       int `json:"daily_percent"`
+	AllMoney           int `json:"all_money"`
+	PercentOfPortfolio int `json:"percent_of_portfolio"`
 }
 
 type PortfolioItem struct {
 	Instrument PortfolioInstrument          `json:"portfolio_instrument"`
 	Analytics  PortfolioInstrumentAnalytics `json:"portfolio_instrument_analytics"`
-}
-
-type TimeInterval struct {
-	From time.Time `json:"from"`
-	To   time.Time `json:"to"`
 }

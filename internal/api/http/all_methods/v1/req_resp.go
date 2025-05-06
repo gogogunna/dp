@@ -1,5 +1,7 @@
 package v1
 
+import "time"
+
 type AuthResponse struct {
 	OK string `json:"ok"`
 }
@@ -13,9 +15,14 @@ type MainPageResponse struct {
 	AllMoney       int    `json:"all_money"`
 }
 
+type TimeInterval struct {
+	From time.Time `json:"from,required"`
+	To   time.Time `json:"to,required"`
+}
+
 type OperationsRequest struct {
-	Figies   []string     `json:"figies"`
-	Interval TimeInterval `json:"interval"`
+	Figies   []string     `json:"figies,required"`
+	Interval TimeInterval `json:"interval,required"`
 }
 
 type OperationsResponse struct {
@@ -23,9 +30,10 @@ type OperationsResponse struct {
 }
 
 type PortfolioRequest struct {
-	Currency int `json:"currency"`
+	Currency int `json:"currency,required"`
 }
 
 type PortfolioResponse struct {
-	Items []PortfolioItem `json:"portfolio_items"`
+	Items          []PortfolioItem `json:"portfolio_items"`
+	WarningMessage *string         `json:"warning_message,omitempty"`
 }

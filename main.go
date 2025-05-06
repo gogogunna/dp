@@ -10,7 +10,7 @@ import (
 	"dp/internal/client/portfolio_provider"
 	"dp/internal/client_factory"
 	"dp/internal/main_page"
-	"dp/internal/position/deal_operation_provider"
+	"dp/internal/operations/deal_operation_provider"
 	portfolio_items_provider "dp/internal/position/portfolio_provider"
 	"fmt"
 	_ "github.com/hashicorp/go-msgpack/codec"
@@ -57,13 +57,13 @@ func main() {
 	factory := client_factory.NewClientFactory(cfg, l)
 	factory.Start(ctx)
 
-	mainPageInfoProvider := main_page.NewMainPageInfoProvider()
 	instrumentsProvider := client.NewInstrumentsInfoProvider()
-	portfolioProvider := portfolio_provider.NewPortfolioProvider()
+	portfolioClientProvider := portfolio_provider.NewPortfolioProvider()
 	operationsProvider := operations_provider.NewOperationsProvider()
-	portfolioItemsProvider := portfolio_items_provider.NewPortfolioItemsProvider(portfolioProvider, instrumentsProvider)
+	portfolioProvider := portfolio_items_provider.NewPortfolioProvider(portfolioClientProvider, instrumentsProvider)
 	dealOperationsProvider := deal_operation_provider.NewDealOperationsProvider(operationsProvider, instrumentsProvider)
-	handler := v1.NewHTTPServerHandler(factory, mainPageInfoProvider, portfolioItemsProvider, dealOperationsProvider)
+	mainPageInfoProvider := main_page.NewMainPageInfoProvider(portfolioProvider)
+	handler := v1.NewHTTPServerHandler(factory, mainPageInfoProvider, portfolioProvider, dealOperationsProvider)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
