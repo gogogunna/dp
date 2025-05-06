@@ -7,12 +7,22 @@ kill() {
 }
 
 build() {
-  docker build -t $APPNAME .
+  docker build --no-cache -t $APPNAME --file Dockerfile --build-context certs_context=/Users/ivanbrynov/GolandProjects/diplomca .
+}
+
+build_prod() {
+  docker build -t $APPNAME --file Dockerfile --build-context certs_context=/etc/letsencrypt/live/tinvestanalytics.ru .
 }
 
 deploy() {
   kill
   build
+  docker run -p 443:443 -d $APPNAME;
+}
+
+deploy_prod() {
+  kill
+  build_prod
   docker run -p 443:443 -d $APPNAME;
 }
 
