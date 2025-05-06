@@ -4,10 +4,11 @@ import (
 	"context"
 	"dp/internal"
 	"dp/internal/client"
+	"dp/pkg/nullable"
 	"fmt"
 )
 
-type PortfolioProvider interface {
+type ClientPortfolioProvider interface {
 	Portfolio(
 		_ context.Context,
 		accountClient internal.AccountIdWithAttachedClientttt,
@@ -23,29 +24,29 @@ type InstrumentsInfoProvider interface {
 	) (map[internal.Figi]client.Instrument, error)
 }
 
-type PortfolioItemsProvider struct {
-	portfolioProvider       PortfolioProvider
+type PortfolioProvider struct {
+	portfolioProvider       ClientPortfolioProvider
 	instrumentsInfoProvider InstrumentsInfoProvider
 }
 
-func NewPortfolioItemsProvider(
-	portfolioProvider PortfolioProvider,
+func NewPortfolioProvider(
+	portfolioProvider ClientPortfolioProvider,
 	instrumentsInfoProvider InstrumentsInfoProvider,
-) *PortfolioItemsProvider {
-	return &PortfolioItemsProvider{
+) *PortfolioProvider {
+	return &PortfolioProvider{
 		portfolioProvider:       portfolioProvider,
 		instrumentsInfoProvider: instrumentsInfoProvider,
 	}
 }
 
-func (p *PortfolioItemsProvider) PortfolioItems(
+func (p *PortfolioProvider) PortfolioItems(
 	ctx context.Context,
 	accountClient internal.AccountIdWithAttachedClientttt,
 	currency int,
-) ([]internal.PortfolioItem, error) {
+) (internal.Portfolio, error) {
 	portfolio, err := p.portfolioProvider.Portfolio(ctx, accountClient, currency)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get minimal portfolio: %w", err)
+		return internal.Portfolio{}, fmt.Errorf("failed to get minimal portfolio: %w", err)
 	}
 
 	figies := make([]internal.Figi, 0, len(portfolio.Items))
@@ -55,14 +56,24 @@ func (p *PortfolioItemsProvider) PortfolioItems(
 
 	instrumentsInfo, err := p.instrumentsInfoProvider.InstrumentsInfo(ctx, accountClient, figies)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get position enriching info: %w", err)
+		return internal.Portfolio{}, fmt.Errorf("failed to get position enriching info: %w", err)
 	}
 
+	portfolioAnalytics := mapPortfolioAnalytics(portfolio)
+	warningMessage := nullable.Nullable[string]{}
 	portfolioItems := make([]internal.PortfolioItem, 0, len(instrumentsInfo))
 	for _, item := range portfolio.Items {
+		portfolioItem, message := MapPortfolioItem(portfolio.AllMoney, item, instrumentsInfo[internal.Figi(item.Figi)])
+		if message.IsDefined() {
+			warningMessage = message
+		}
 
-		portfolioItems = append(portfolioItems, MapPortfolioItem(item, instrumentsInfo[internal.Figi(item.Figi)]))
+		portfolioItems = append(portfolioItems, portfolioItem)
 	}
 
-	return portfolioItems, nil
+	return internal.Portfolio{
+		PortfolioAnalytics: portfolioAnalytics,
+		Items:              portfolioItems,
+		WarningMessage:     warningMessage,
+	}, nil
 }

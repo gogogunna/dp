@@ -35,3 +35,9 @@ type PortfolioItem struct {
 	AllTimeMoney internal.UnitsWithNano
 	DailyMoney   internal.UnitsWithNano
 }
+
+type InstrumentPrice struct {
+	Price     internal.UnitsWithNano
+	RealTime  time.Time
+	PointTime time.Time
+}

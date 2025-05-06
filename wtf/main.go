@@ -1,23 +1,24 @@
 package main
 
-import (
-	"encoding/json"
-	"fmt"
-	"time"
-)
+import "fmt"
+
+type s struct {
+	g int
+}
 
 func main() {
-	str := struct {
-		Time time.Time
-	}{
-		Time: time.Now(),
+	b := []s{
+		{
+			g: 1,
+		},
+		{
+			g: 2,
+		},
 	}
 
-	bytes, err := json.Marshal(str)
-	if err != nil {
-		fmt.Println(err)
+	for i := range b {
+		b[i].g = 120
 	}
 
-	fmt.Println(string(bytes))
-	fmt.Println(str.Time.Nanosecond())
+	fmt.Println(b)
 }
