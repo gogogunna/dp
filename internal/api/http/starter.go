@@ -14,6 +14,11 @@ func StartHTTPServer(handler Handler) error {
 	http.HandleFunc("/main/v1", handler.MainPageInfo)
 	http.HandleFunc("/portfolio/v1", handler.Portfolio)
 	http.HandleFunc("/operations/v1", handler.Operations)
-	err := http.ListenAndServe(":80", nil)
+	err := http.ListenAndServeTLS(
+		":443",
+		"/etc/letsencrypt/live/tinvestanalytics.ru/fullchain.pem",
+		"/etc/letsencrypt/live/tinvestanalytics.ru/privkey.pem",
+		nil,
+	)
 	return err
 }
