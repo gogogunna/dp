@@ -16,8 +16,8 @@ func StartHTTPServer(handler Handler) error {
 	http.HandleFunc("/operations/v1", handler.Operations)
 	err := http.ListenAndServeTLS(
 		":443",
-		"/etc/ssl/certs/fullchain.pem",
-		"/etc/ssl/certs/privkey.pem",
+		"/etc/ssl/certs/fullchain1.pem",
+		"/etc/ssl/certs/privkey1.pem",
 		nil,
 	)
 	return err
