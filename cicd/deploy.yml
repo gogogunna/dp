@@ -1,0 +1,44 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ ]
+    tags: [ 'v*' ]
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Build
+        run: |
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o bin/yourapp ./cmd/yourapp
+
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            cd /opt/yourapp
+            sudo systemctl stop yourapp.service || true
+            mv bin/yourapp /opt/yourapp/yourapp_new
+            chmod +x /opt/yourapp/yourapp_new
+            mv /opt/yourapp/yourapp_new /opt/yourapp/yourapp
+            sudo systemctl start yourapp.service
+            sleep 5
+            sudo systemctl status yourapp.service
