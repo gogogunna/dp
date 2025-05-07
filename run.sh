@@ -11,7 +11,7 @@ build() {
 }
 
 build_prod() {
-  docker build -t $APPNAME --file Dockerfile --build-context certs_context=/etc/letsencrypt/live/tinvestanalytics.ru .
+  docker build -t $APPNAME --file Dockerfile --build-context certs_context=$(realpath /etc/letsencrypt/live/tinvestanalytics.ru).
 }
 
 deploy() {
